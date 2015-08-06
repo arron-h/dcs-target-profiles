@@ -16,7 +16,7 @@ int setupAxis()
 	MapAxis( &T16000, JOYX, DX_X_AXIS );
 	MapAxis( &T16000, JOYY, DX_Y_AXIS );
 	MapAxis( &T16000, RUDDER, DX_ZROT_AXIS );
-	MapAxis( &T16000, THROTTLE, DX_SLIDER_AXIS );
+	MapAxis( &T16000, THR, DX_SLIDER_AXIS );
 
 	// Setup a small deadzone in the centre of the main axis
 	SetSCurve( &T16000, JOYX, 0, 4, 0, 0, 0 );
