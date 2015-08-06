@@ -1,33 +1,151 @@
-/*
- * Arron Hartley
- * August 2015
- *
- * A simple C-like script for Thrustmaster's T.A.R.G.E.T software which
- * sets up joystick mappings for DCS SU-25T.
- *
- * The joystick in use is the Thrustmaster T.16000m
- */
+//
+// Arron Hartley
+// August 2015
+//
+// A simple C-like script for Thrustmaster's T.A.R.G.E.T software which
+// sets up joystick mappings for DCS SU-25T.
+//
+// The joystick in use is the Thrustmaster T.16000m
+//
 
 include "target.tmh"
 include "include/DCS_SU-25T.ttm"
 
-void setupAxis()
+int setupAxis()
 {
 	MapAxis( &T16000, JOYX, DX_X_AXIS );
 	MapAxis( &T16000, JOYY, DX_Y_AXIS );
 	MapAxis( &T16000, RUDDER, DX_ZROT_AXIS );
 	MapAxis( &T16000, THROTTLE, DX_SLIDER_AXIS );
+
+	// Setup a small deadzone in the centre of the main axis
+	SetSCurve( &T16000, JOYX, 0, 4, 0, 0, 0 );
+	SetSCurve( &T16000, JOYY, 0, 4, 0, 0, 0 );
 }
 
-void setupButtons()
+int setupTopButtons()
 {
-	MapKeyUMD( &T16000, B1,
+	// Buttons on the upper segment
+	MapKeyUMD( &T16000, TS1,
 			Weapon_Fire,
 			Wheel_Brake_On,
 			Weapon_Fire );
+
+	MapKeyUMD( &T16000, TS2,
+			_8__Gunsight_Reticle_Switch,
+			Autopilot,
+			Target_Lock );
+
+	MapKeyUMD( &T16000, TS3,
+			Cannon,
+			Autopilot_Disengage,
+			Cannon );
+	
+	MapKeyUMD( &T16000, TS4,
+			Weapon_Change,
+			0,
+			Weapon_Change );
+
+	// HAT toggles
+	MapKeyIOUMD( &T16000, H1R,
+			0, // IU
+			0, // OU
+			Trim__Right_Wing_Down, // IM
+			Trim__Right_Wing_Down, // OM
+			Target_Designator_Right, // ID
+			Target_Size_Gunpod_Elevation_Increase ); // UD
+
+	MapKeyIOUMD( &T16000, H1L,
+			0, // IU
+			0, // OU
+			Trim__Left_Wing_Down, // IM
+			Trim__Left_Wing_Down, // OM
+			Target_Designator_Left, // ID
+			Target_Size_Gunpod_Elevation_Decrease ); // UD
+
+	MapKeyIOUMD( &T16000, H1U,
+			0, // IU
+			0, // OU
+			Trim__Nose_Down, // IM
+			Trim__Nose_Down, // OM
+			Target_Designator_Up, // ID
+			Display_Zoom_In ); // UD
+
+	MapKeyIOUMD( &T16000, H1D,
+			0, // IU
+			0, // OU
+			Trim__Nose_Up, // IM
+			Trim__Nose_Up, // OM
+			Target_Designator_Down, // ID
+			Display_Zoom_Out ); // UD
 }
 
-int eventHandler( int type, alias o, int x )
+int setupBaseButtons()
+{
+	// Left-hand-side base buttons
+	MapKeyUMD( &T16000, B5,
+		0,
+		Next_Waypoint__Airfield_Or_Target,
+		Autopilot_Altitude_And_Roll_Hold );
+
+	MapKeyUMD( &T16000, B6,
+		0,
+		Jettison_Fuel_Tanks,
+		Autopilot_Disengage );
+				
+	MapKeyUMD( &T16000, B7,
+		Eject__3_times_,
+		Weapons_Jettison,
+		Eject__3_times_ );
+
+	MapKeyUMD( &T16000, B8,
+		Countermeasures_Flares_Dispense,
+		Flaps_Up_Down,
+		Countermeasures_Flares_Dispense );
+
+	MapKeyUMD( &T16000, B9,
+		Countermeasures_Chaff_Dispense,
+		Landing_Gear_Up_Down,
+		Countermeasures_Chaff_Dispense );
+	
+	MapKeyUMD( &T16000, B10,
+		IR_Jamming,
+		Airbrake,
+		IR_Jamming );
+	
+	// Right-hand-side base buttons
+	MapKeyUMD( &T16000, B11, // Toggles 'D' mode (A2G)
+		0,
+		0,
+		0 );
+
+	MapKeyUMD( &T16000, B12, // Toggles 'U' mode (A2A)
+		0,
+		0,
+		0 );
+
+	MapKeyUMD( &T16000, B13, 
+		_6__Longitudinal_Missile_Aiming_Mode,
+		_1__Navigation_Modes,
+		_7__Air_To_Ground_Mode );
+
+	MapKeyUMD( &T16000, B14,
+		0,
+		Gear_Light_Near_Far_Off,
+		0 ); // Toggles IO mode for A2G
+
+	MapKeyUMD( &T16000, B15,
+		0,
+		Navigation_lights,
+		Laser_Ranger_On_Off );
+
+	MapKeyUMD( &T16000, B16,
+		0,
+		Illumination_Cockpit,
+		Electro_Optical_System_On_Off );
+}
+
+int EventHandle( int type, alias o, int x )
 {
 	DefaultMapping( &o, x );
 	return 0;
@@ -42,17 +160,18 @@ int main()
 	Configure( &Throttle, MODE_EXCLUDED );
 	Configure( &Joystick, MODE_EXCLUDED );
 
-	if ( Init( &eventHandler ) );
+	if ( Init( &EventHandle ) )
 	{
 		return 1;
 	}
 
 	// First, set the shift handler.
-	SetShiftButton( &T16000, B11, // I/O toggle on B11
-			&T16000, B12, B13, IOTOGGLE + UDTOGGLE ); // U = B12, D = B13
+	SetShiftButton( &T16000, B14, // I/O toggle on B14
+			&T16000, B12, B11, IOTOGGLE + UDTOGGLE ); // U = B12, D = B11
 
 	setupAxis();
-	setupButtons();
+	setupTopButtons();
+	setupBaseButtons();
 
 	return 0;
 }
