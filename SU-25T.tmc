@@ -1,0 +1,58 @@
+/*
+ * Arron Hartley
+ * August 2015
+ *
+ * A simple C-like script for Thrustmaster's T.A.R.G.E.T software which
+ * sets up joystick mappings for DCS SU-25T.
+ *
+ * The joystick in use is the Thrustmaster T.16000m
+ */
+
+include "target.tmh"
+include "include/DCS_SU-25T.ttm"
+
+void setupAxis()
+{
+	MapAxis( &T16000, JOYX, DX_X_AXIS );
+	MapAxis( &T16000, JOYY, DX_Y_AXIS );
+	MapAxis( &T16000, RUDDER, DX_ZROT_AXIS );
+	MapAxis( &T16000, THROTTLE, DX_SLIDER_AXIS );
+}
+
+void setupButtons()
+{
+	MapKeyUMD( &T16000, B1,
+			Weapon_Fire,
+			Wheel_Brake_On,
+			Weapon_Fire );
+}
+
+int eventHandler( int type, alias o, int x )
+{
+	DefaultMapping( &o, x );
+	return 0;
+}
+
+int main()
+{
+	// Exclude devices we aren't using
+	Configure( &HCougar, MODE_EXCLUDED );
+	Configure( &LMFD, MODE_EXCLUDED );
+	Configure( &RMFD, MODE_EXCLUDED );
+	Configure( &Throttle, MODE_EXCLUDED );
+	Configure( &Joystick, MODE_EXCLUDED );
+
+	if ( Init( &eventHandler ) );
+	{
+		return 1;
+	}
+
+	// First, set the shift handler.
+	SetShiftButton( &T16000, B11, // I/O toggle on B11
+			&T16000, B12, B13, IOTOGGLE + UDTOGGLE ); // U = B12, D = B13
+
+	setupAxis();
+	setupButtons();
+
+	return 0;
+}
